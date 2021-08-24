@@ -41,7 +41,7 @@ class UserController extends Controller
                 $success['name'] =  $user->name;
         return response()->json(['success'=>$success], $this-> successStatus); 
     }
-
+    
     public function details() 
     { 
         $user = Auth::user(); 
