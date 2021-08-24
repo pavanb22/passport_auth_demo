@@ -1,64 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Laravel passport
 
-## About Laravel
+## Getting Started
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Step 1: Install Package**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```
+composer require laravel/passport
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**open config/app.php file and add service provider**
 
-## Learning Laravel
+```
+config/app.php
+'providers' =>[
+    Laravel\Passport\PassportServiceProvider::class,
+],
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**Step 2: Run Migration and Install**
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```
+php artisan migrate
+php artisan passport:install
+```
 
-## Laravel Sponsors
+**Step 3: Passport Configuration app/User.php**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```
+<?php
 
-### Premium Partners
+namespace App\Models;
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[CMS Max](https://www.cmsmax.com/)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Passport\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 
-## Contributing
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable;
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
-## Code of Conduct
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+}
+```
 
-## Security Vulnerabilities
+**app/Providers/AuthServiceProvider.php**
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+<?php
+namespace App\Providers;
+use Laravel\Passport\Passport; 
+use Illuminate\Support\Facades\Gate; 
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+class AuthServiceProvider extends ServiceProvider 
+{ 
+    /** 
+     * The policy mappings for the application. 
+     * 
+     * @var array 
+     */ 
+    protected $policies = [ 
+        'App\Model' => 'App\Policies\ModelPolicy', 
+    ];
+/** 
+     * Register any authentication / authorization services. 
+     * 
+     * @return void 
+     */ 
+    public function boot() 
+    { 
+        $this->registerPolicies(); 
+        Passport::routes(); 
+    } 
+}
+```
 
-## License
+**Step 4 :config/auth.php**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+<?php
+return [
+'guards' => [ 
+        'web' => [ 
+            'driver' => 'session', 
+            'provider' => 'users', 
+        ], 
+        'api' => [ 
+            'driver' => 'passport', 
+            'provider' => 'users', 
+        ], 
+    ],
+```
+
+**Step 5: Create API Route**
+
+```
+Route::post('login',[UserController::class,"login"]);
+
+Route::post('register',[UserController::class,"register"]);
+Route::group(['middleware' => 'auth:api'], function(){
+    Route::post('details',[UserController::class,"details"]);
+});
+```
+
+**Step 6: Create the Controller**
+
+```
+<?php
+
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\User; 
+use Illuminate\Support\Facades\Auth; 
+use Validator;
+
+class UserController extends Controller
+{
+    public $successStatus = 200;
+
+    public function login(){ 
+        if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){ 
+            $user = Auth::user(); 
+            $success['token'] =  $user->createToken('MyApp')-> accessToken; 
+            return response()->json(['success' => $success], $this-> successStatus); 
+        } 
+        else{ 
+            return response()->json(['error'=>'Unauthorised'], 401); 
+        } 
+    }
+
+    public function register(Request $request) 
+    { 
+        $validator = Validator::make($request->all(), [ 
+            'name' => 'required', 
+            'email' => 'required|email', 
+            'password' => 'required', 
+            'c_password' => 'required|same:password', 
+        ]);
+        if ($validator->fails()) { 
+                    return response()->json(['error'=>$validator->errors()], 401);            
+                }
+        $input = $request->all(); 
+                $input['password'] = bcrypt($input['password']); 
+                $user = User::create($input); 
+                $success['token'] =  $user->createToken('MyApp')-> accessToken; 
+                $success['name'] =  $user->name;
+        return response()->json(['success'=>$success], $this-> successStatus); 
+    }
+
+    public function details() 
+    { 
+        $user = Auth::user(); 
+        return response()->json(['success' => $user], $this-> successStatus); 
+    } 
+}
+```
