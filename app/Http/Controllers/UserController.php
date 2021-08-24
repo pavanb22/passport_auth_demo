@@ -22,6 +22,12 @@ class UserController extends Controller
             return response()->json(['error'=>'Unauthorised'], 401); 
         } 
     }
+    
+    public function details() 
+    { 
+        $user = Auth::user(); 
+        return response()->json(['success' => $user], $this-> successStatus); 
+    } 
 
     public function register(Request $request) 
     { 
@@ -41,10 +47,4 @@ class UserController extends Controller
                 $success['name'] =  $user->name;
         return response()->json(['success'=>$success], $this-> successStatus); 
     }
-    
-    public function details() 
-    { 
-        $user = Auth::user(); 
-        return response()->json(['success' => $user], $this-> successStatus); 
-    } 
 }
